@@ -17,11 +17,11 @@ can read .rle files
 
 opens pattern.rle in the current directory by default.
 
-Keys :
-Esc : exit
-Space : step
-- : reduce step size
-+ : increase step size
+Keys\: <br/>
+Esc\: exit<br/>
+Space\: step<br/>
+\- \: reduce step size<br/>
+\+ \: increase step size<br/>
 
 
 
