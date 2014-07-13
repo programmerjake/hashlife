@@ -1,9 +1,9 @@
 HashLife
 ============
 
-A [hashlife]<http://en.wikipedia.org/wiki/hashlife> implementation that supports changing background states.
+A [hashlife](http://en.wikipedia.org/wiki/hashlife "wikipedia.org") implementation that supports changing background states.
 
-depends on [SDL2]<http://libsdl.org/download-2.0.php>
+depends on [SDL2](http://libsdl.org/download-2.0.php "libsdl.org")
 
 Building:
 
