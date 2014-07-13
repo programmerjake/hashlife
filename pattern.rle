@@ -1,0 +1,38 @@
+#CXRLE Pos=0,0
+#C This is a Fermat prime calculator, rigged to self-destruct and stop
+#C growing if any Fermat primes over 65537 turn up. Since the
+#C existence of such primes is an unsolved problem in mathematics,
+#C it is unknown if this pattern grows to infinite population.
+#C 
+#C The tubs in a row represent the known Fermat primes, starting
+#C with 5. The other three represent 17, 257, and 65537. A tub gets
+#C destroyed whenever a Fermat prime is found. In the unlikely event
+#C that an additional Fermat prime exists, the pond will eventually be
+#C destroyed, followed by the puffers and breeders.
+#C 
+#C A number N is tested at about generation 120N - 550, so the tubs
+#C will be destroyed at about generations: 50; 1,490; 30,290; and
+#C 7,863,890.
+#C 
+#C The next-smallest Fermat number that is not known to be composite
+#C is 2^2^31+1. Therefore, the pond (and the breeders) will survive at
+#C least 10^640,000,000 generations. So don't expect to see anything
+#C interesting happen by watching this pattern. Remove the tubs if you
+#C want to see the destruction.
+#C 
+#C The careful observer may notice that actually every number of the
+#C form 2^N+1 is tested for primality, while Fermat numbers are of the
+#C form 2^(2^N)+1. However, numbers of the form M^N+1 can never be
+#C prime unless N is a power of 2, so the only primes of the form
+#C 2^N+1 are in fact the Fermat primes.
+#C 
+#C The "Primer" and "Caber Tosser" patterns used here are by Dean
+#C Hickerson. The beehive puffer is by Hartmut Holzwart.
+#C 
+#C Jason Summers, 7 Jan 2000
+x = 59739, y = 14663, rule = B3/S23
+15366bo$15366bo$15364b2o$15363bo$15363bo$15363bo$15363bo6$15393bo$
+15392b2o$15390bo2bo2$15390bobo$15391bo133$15568b2o$15569b2o$15569bo29$
+15554bo$15553bobo$15555bo$15556bo507$59722b2o$59721b2o$59722bo29$
+59737bo$59736bobo$59736bo$59735bo13907$bo3bo$2bobo$o2bo$o$o21$33bo$32b
+o$31bo$32bo$33bo$29b3o!
