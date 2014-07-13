@@ -1,9 +1,9 @@
 HashLife
 ============
 
-A [hashlife]<http://en.wikipedia.org/wiki/hashlife> implementation that supports changing background states.
+A [hashlife](http://en.wikipedia.org/wiki/hashlife "wikipedia.org") implementation that supports changing background states.
 
-depends on [SDL2]<http://libsdl.org/download-2.0.php>
+depends on [SDL2](http://libsdl.org/download-2.0.php "libsdl.org")
 
 Building:
 
@@ -17,11 +17,11 @@ can read .rle files
 
 opens pattern.rle in the current directory by default.
 
-Keys :
-Esc : exit
-Space : step
-- : reduce step size
-+ : increase step size
+Keys\: <br/>
+Esc\: exit<br/>
+Space\: step<br/>
+\- \: reduce step size<br/>
+\+ \: increase step size<br/>
 
 
 
