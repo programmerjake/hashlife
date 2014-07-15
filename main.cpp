@@ -239,13 +239,6 @@ CellType eval(CellType nxny, CellType nxcy, CellType nxpy,
     return rules[0][count];
 }
 
-CellType stepBackground(CellType bg, size_t logStepSize)
-{
-    if(logStepSize == 0)
-        return rules[bg != 0][bg != 0 ? 8 : 0];
-    return stepBackground(stepBackground(bg, 0), 0);
-}
-
 struct NodeGCHashTable;
 struct NodeType;
 
@@ -1452,36 +1445,39 @@ private:
     void checkForContractRoot()
     {
         assert(gc != nullptr);
-        if(rootNode->level < 2)
+        for(;;)
         {
-            return;
+            if(rootNode->level < 2)
+            {
+                return;
+            }
+            NodeReference nullNode = gc->getNullNode(rootNode->level - 2, backgroundType);
+            if(rootNode->nxny.nonleaf->nxny.nonleaf != nullNode)
+                return;
+            if(rootNode->nxny.nonleaf->nxpy.nonleaf != nullNode)
+                return;
+            if(rootNode->nxny.nonleaf->pxny.nonleaf != nullNode)
+                return;
+            if(rootNode->nxpy.nonleaf->nxny.nonleaf != nullNode)
+                return;
+            if(rootNode->nxpy.nonleaf->nxpy.nonleaf != nullNode)
+                return;
+            if(rootNode->nxpy.nonleaf->pxpy.nonleaf != nullNode)
+                return;
+            if(rootNode->pxny.nonleaf->nxny.nonleaf != nullNode)
+                return;
+            if(rootNode->pxny.nonleaf->pxny.nonleaf != nullNode)
+                return;
+            if(rootNode->pxny.nonleaf->pxpy.nonleaf != nullNode)
+                return;
+            if(rootNode->pxpy.nonleaf->nxpy.nonleaf != nullNode)
+                return;
+            if(rootNode->pxpy.nonleaf->pxny.nonleaf != nullNode)
+                return;
+            if(rootNode->pxpy.nonleaf->pxpy.nonleaf != nullNode)
+                return;
+            rootNode = rootNode->getCenter(gc);
         }
-        NodeReference nullNode = gc->getNullNode(rootNode->level - 2, backgroundType);
-        if(rootNode->nxny.nonleaf->nxny.nonleaf != nullNode)
-            return;
-        if(rootNode->nxny.nonleaf->nxpy.nonleaf != nullNode)
-            return;
-        if(rootNode->nxny.nonleaf->pxny.nonleaf != nullNode)
-            return;
-        if(rootNode->nxpy.nonleaf->nxny.nonleaf != nullNode)
-            return;
-        if(rootNode->nxpy.nonleaf->nxpy.nonleaf != nullNode)
-            return;
-        if(rootNode->nxpy.nonleaf->pxpy.nonleaf != nullNode)
-            return;
-        if(rootNode->pxny.nonleaf->nxny.nonleaf != nullNode)
-            return;
-        if(rootNode->pxny.nonleaf->pxny.nonleaf != nullNode)
-            return;
-        if(rootNode->pxny.nonleaf->pxpy.nonleaf != nullNode)
-            return;
-        if(rootNode->pxpy.nonleaf->nxpy.nonleaf != nullNode)
-            return;
-        if(rootNode->pxpy.nonleaf->pxny.nonleaf != nullNode)
-            return;
-        if(rootNode->pxpy.nonleaf->pxpy.nonleaf != nullNode)
-            return;
-        rootNode = rootNode->getCenter(gc);
     }
 public:
     void step(size_t logStepSize)
@@ -1491,8 +1487,8 @@ public:
         expandRoot();
         while(rootNode->level < logStepSize + 1)
             expandRoot();
+        backgroundType = getCellH(gc->getNullNode(rootNode->level, backgroundType)->getNextState(gc, logStepSize), 0, 0, 0, 0);
         rootNode = rootNode->getNextState(gc, logStepSize);
-        backgroundType = stepBackground(backgroundType, logStepSize);
         checkForContractRoot();
     }
     operator bool() const
