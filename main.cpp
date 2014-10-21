@@ -1,5 +1,13 @@
+#ifdef __EMSCRIPTEN__
+#define USE_SDL_1_x
+#include <emscripten.h>
+#endif // __EMSCRIPTEN__
 #include <cstdlib>
+#ifdef USE_SDL_1_x
+#include <SDL/SDL.h>
+#else
 #include <SDL2/SDL.h>
+#endif // USE_SDL_1_x
 #include <atomic>
 #include <cstdint>
 #include <mutex>
@@ -18,7 +26,11 @@
 
 using namespace std;
 
+#ifdef __EMSCRIPTEN__
+constexpr size_t maxNodeCount = 600000;
+#else
 constexpr size_t maxNodeCount = 3000000;
+#endif
 constexpr size_t startGCNodeCount = 6 * maxNodeCount / 7;
 
 typedef uint_least32_t CellType;
@@ -1802,8 +1814,8 @@ int main(int argc, char ** argv)
     }
     ifstream rleStream(fName.c_str());
     cout << "reading '" << fName << "'...\n";
-    auto gc = new NodeGCHashTable;
-    GameState gs = readRLE(rleStream, gc);
+    static auto gc = new NodeGCHashTable;
+    static GameState gs = readRLE(rleStream, gc);
     rleStream.close();
     if(!gs)
         return 1;
@@ -1820,6 +1832,37 @@ int main(int argc, char ** argv)
 
     // make sure SDL cleans up before exit
     atexit(SDL_Quit);
+#ifdef USE_SDL_1_x
+#ifndef __EMSCRIPTEN__
+    const int w = 1024, h = 768;
+#else
+    static int w, h;
+    w = 1 << 20;
+    {
+        int aw = emscripten_run_script_int("window.innerWidth");
+        const int extraAreaForText = 100;
+        int ah = emscripten_run_script_int("window.innerHeight") - extraAreaForText;
+        emscripten_log(0, "%dx%d", aw, ah);
+        while((aw < w || ah < w) && w > 1)
+            w /= 2;
+    }
+    h = w;
+#endif // __EMSCRIPTEN__
+    static SDL_Surface *screen;
+    screen = SDL_SetVideoMode(w, h, 32, SDL_ANYFORMAT);
+    if(!screen)
+    {
+        printf("Unable to create screen: %s\n", SDL_GetError());
+        return 1;
+    }
+    static SDL_Surface *texture;
+    texture = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 32, RGBA(0xFF, 0, 0, 0), RGBA(0, 0xFF, 0, 0), RGBA(0, 0, 0xFF, 0), RGBA(0, 0, 0, 0xFF));
+    if(!texture)
+    {
+        printf("Unable to create texture: %s\n", SDL_GetError());
+        return 1;
+    }
+#else
     SDL_Window *window = SDL_CreateWindow("HashLife", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                                           1024, 768, (SDL_WINDOW_FULLSCREEN_DESKTOP, 0));
 
@@ -1847,18 +1890,28 @@ int main(int argc, char ** argv)
         printf("Unable to create texture: %s\n", SDL_GetError());
         return 1;
     }
+#endif
 
-    bool done = false;
-    size_t stepSize = 0;
+#ifdef __EMSCRIPTEN__
+    emscripten_set_main_loop([](){
+#endif
+    static bool done = false, canPause = false;
+    static size_t stepSize = 0;
 
+#ifndef __EMSCRIPTEN__
     while(!done)
     {
+#endif
         // message processing loop
         SDL_Event event;
 
         bool doStep = false;
 
+#ifdef __EMSCRIPTEN__
         while(SDL_PollEvent(&event))
+#else
+        while(canPause ? SDL_WaitEvent(&event) : SDL_PollEvent(&event))
+#endif
         {
             // check for messages
             switch(event.type)
@@ -1866,6 +1919,7 @@ int main(int argc, char ** argv)
             // exit if the window is closed
             case SDL_QUIT:
                 done = true;
+                canPause = false;
                 break;
 
             // check for keypresses
@@ -1875,40 +1929,79 @@ int main(int argc, char ** argv)
                 if(event.key.keysym.sym == SDLK_ESCAPE)
                 {
                     done = true;
+                    canPause = false;
                 }
                 if(event.key.keysym.sym == SDLK_SPACE)
                 {
                     doStep = true;
+                    canPause = false;
                 }
-                if(event.key.keysym.sym == SDLK_PLUS || event.key.keysym.sym == SDLK_EQUALS)
+                if(event.key.keysym.sym == SDLK_PLUS || event.key.keysym.sym == SDLK_EQUALS || event.key.keysym.sym == SDLK_a)
                 {
                     stepSize++;
+                    canPause = false;
                 }
-                if(event.key.keysym.sym == SDLK_UNDERSCORE || event.key.keysym.sym == SDLK_MINUS)
+                if(event.key.keysym.sym == SDLK_UNDERSCORE || event.key.keysym.sym == SDLK_MINUS || event.key.keysym.sym == SDLK_z)
                 {
                     if(stepSize > 0)
                         stepSize--;
+                    canPause = false;
                 }
 
                 break;
             }
             } // end switch
         } // end of message processing
-        cout << "Step Size : " << stepSize << "     Level : " << gs.rootNode->level << "\x1b[K\r" << flush;
+#ifdef __EMSCRIPTEN__
+        ostringstream textStream;
+        textStream
+#else
+        cout
+#endif
+         << "Step Size : " << stepSize << "     Level : " << gs.rootNode->level;
+#ifdef __EMSCRIPTEN__
+        static string lastLogString = "";
+        string logString = textStream.str();
+        if(lastLogString != logString)
+        {
+            emscripten_log(0, "%s", logString.c_str());
+            lastLogString = logString;
+        }
+#else
+        cout << "\x1b[K\r" << flush;
+#endif // __EMSCRIPTEN__
         if(doStep)
             gs.step(stepSize);
 
 
         void *pixels;
         int pitch;
+#ifdef USE_SDL_1_x
+        SDL_LockSurface(texture);
+        pixels = texture->pixels;
+        pitch = texture->pitch;
+#else
         SDL_LockTexture(texture, nullptr, &pixels, &pitch);
+#endif // USE_SDL_1_x
         gs.draw(8, pixels, w, h, pitch);
+#ifdef USE_SDL_1_x
+        SDL_UnlockSurface(texture);
+        SDL_BlitSurface(texture, nullptr, screen, nullptr);
+        SDL_Flip(screen);
+#else
         SDL_UnlockTexture(texture);
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, texture, nullptr, nullptr);
         SDL_RenderPresent(renderer);
+#endif
+#ifndef __EMSCRIPTEN__
+        if(!doStep)
+            canPause = true;
+#endif
     } // end main loop
-
+#ifdef __EMSCRIPTEN__
+    , 0, true);
+#endif
     return 0;
 }
 

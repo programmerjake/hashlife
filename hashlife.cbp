@@ -21,7 +21,6 @@
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="p168-knightship.rle" />
 				<Compiler>
 					<Add option="-O2" />
 				</Compiler>
@@ -31,8 +30,8 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-std=c++11" />
 			<Add option="-Wall" />
+			<Add option="-std=c++11" />
 			<Add option="`sdl2-config --cflags`" />
 		</Compiler>
 		<Linker>
